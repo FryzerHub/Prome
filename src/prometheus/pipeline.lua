@@ -84,6 +84,12 @@ function Pipeline:fromConfig(config)
 	});
 
 	pipeline:setNameGenerator(config.NameGenerator or "MangledShuffled")
+	
+	-- Enable VM mode if specified in config
+	if config.vmMode then
+		pipeline.vmMode = true
+		pipeline.vmSettings = config.vmSettings or {}
+	end
 
 	-- Add all Steps defined in Config
 	local steps = config.Steps or {};
@@ -100,6 +106,7 @@ function Pipeline:fromConfig(config)
 
 	return pipeline;
 end
+
 
 function Pipeline:addStep(step)
 	table.insert(self.steps, step);
@@ -209,6 +216,26 @@ function Pipeline:apply(code, filename)
 	local parserTimeDiff = gettime() - parserStartTime;
 	logger:info(string.format("Parsing Done in %.2f seconds", parserTimeDiff));
 
+	-- CHECK IF VM MODE IS ENABLED
+	if self.vmMode then
+		-- === VM MODE: Compile to custom bytecode ===
+		logger:info("VM Mode enabled - generating custom bytecode VM...");
+		
+		local vmStartTime = gettime()
+		local VMGenerator = require("prometheus.vm.VmGenerator")
+		local vmGen = VMGenerator:new(self.vmSettings or {})
+		local output = vmGen:generateFromAST(ast, code)
+		
+		logger:info(string.format("VM generation done in %.2f seconds", gettime() - vmStartTime))
+		
+		local timeDiff = gettime() - startTime;
+		logger:info(string.format("Total time: %.2f seconds", timeDiff));
+		logger:info(string.format("Generated Code size is %.2f%% of the Source Code size", (string.len(output) / sourceLen)*100))
+		
+		return output
+	end
+
+	-- === TRADITIONAL MODE: Apply obfuscation steps ===
 	-- User Defined Steps
 	for i, step in ipairs(self.steps) do
 		local stepStartTime = gettime();
@@ -232,6 +259,7 @@ function Pipeline:apply(code, filename)
 
 	return code;
 end
+
 
 function Pipeline:unparse(ast)
 	local startTime = gettime();

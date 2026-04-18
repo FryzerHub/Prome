@@ -195,5 +195,82 @@ return {
 			{ Name = "DecoderProof", Settings = { Enabled = true } },
 		},
 	},
+
+	-- VMStrong: Custom VM bytecode compilation (completely undecodable)
+	-- Compiles Lua to custom bytecode that runs on custom VM interpreter
+	-- Decoders cannot reverse this - no recognizable Lua structure
+	-- Result: Unbreakable protection for Roblox scripts
+	["VMStrong"] = {
+		LuaVersion = "Lua51",
+		VarNamePrefix = "",
+		NameGenerator = "Confuse",
+		PrettyPrint = false,
+		Seed = 0,
+		vmMode = true,  -- CRITICAL: Enable VM bytecode mode
+		vmSettings = {
+			-- Obfuscate the VM runtime code itself
+			obfuscateVMRuntime = true,
+			
+			-- Encrypt bytecode instructions
+			encryptBytecode = true,
+			
+			-- Randomize opcode values
+			shuffleOpcodes = true,
+			
+			-- Add anti-debugging checks
+			antiDebug = true,
+			
+			-- Runtime security
+			security = {
+				detectDebugger = true,
+				checkIntegrity = true,
+				randomizeExecution = false,
+			}
+		},
+		-- Traditional steps are ignored in VM mode
+		Steps = {},
+	},
+
+	-- VMFast: VM mode with speed optimization
+	["VMFast"] = {
+		LuaVersion = "Lua51",
+		VarNamePrefix = "",
+		NameGenerator = "MangledShuffled",
+		PrettyPrint = false,
+		Seed = 0,
+		vmMode = true,
+		vmSettings = {
+			obfuscateVMRuntime = true,
+			encryptBytecode = false,  -- Faster
+			shuffleOpcodes = true,
+			antiDebug = false,  -- Faster
+			security = {
+				detectDebugger = false,
+				checkIntegrity = false,
+			}
+		},
+		Steps = {},
+	},
+
+	-- VMBalanced: VM mode with balanced security/performance
+	["VMBalanced"] = {
+		LuaVersion = "Lua51",
+		VarNamePrefix = "",
+		NameGenerator = "MangledShuffled",
+		PrettyPrint = false,
+		Seed = 0,
+		vmMode = true,
+		vmSettings = {
+			obfuscateVMRuntime = true,
+			encryptBytecode = true,
+			shuffleOpcodes = true,
+			antiDebug = false,
+			security = {
+				detectDebugger = false,
+				checkIntegrity = true,
+			}
+		},
+		Steps = {},
+	},
 }
 

@@ -116,6 +116,21 @@ while i <= #arg do
 			luaVersion = "LuaU"
 		elseif curr == "--pretty" then
 			prettyPrint = true
+		elseif curr == "--vm" then
+			-- Enable VM mode (bytecode compilation instead of Lua obfuscation)
+			if config then
+				config.vmMode = true
+			else
+				config = {
+					vmMode = true,
+					vmSettings = {
+						obfuscateVMRuntime = true,
+						encryptBytecode = true,
+						shuffleOpcodes = true,
+						antiDebug = true,
+					}
+				}
+			end
 		elseif curr == "--saveerrors" then
 			-- Override error callback
 			Prometheus.Logger.errorCallback = function(...)
@@ -143,6 +158,7 @@ while i <= #arg do
 	end
 	i = i + 1
 end
+
 
 if not sourceFile then
 	Prometheus.Logger:error("No input file was specified!")

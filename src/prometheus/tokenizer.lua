@@ -332,7 +332,7 @@ function Tokenizer:number()
 			source = source .. get(self);
 		end
 		local v = int(self, self.NumberCharsLookup, lookupify(self.DecimalSeperators or {}));
-		if(v:len() < 1) then
+		if(not v or v:len() < 1) then
 			logger:error(generateError(self, "Expected a Valid Exponent!"));
 		end
 		source = source .. v;
