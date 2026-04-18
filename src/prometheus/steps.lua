@@ -21,7 +21,11 @@ return {
 	ControlFlowFlattening = require("prometheus.steps.ControlFlowFlattening"),
 	OpaquePredicates = require("prometheus.steps.OpaquePredicates"),
 	MixedBooleanArithmetic = require("prometheus.steps.MixedBooleanArithmetic"),
-	Vmify = require("prometheus.steps.Vmify"),
+
+	ConstantArray  = require("prometheus.steps.ConstantArray"),
+    Vmify          = require("prometheus.steps.Vmify"),
+    WrapInFunction = require("prometheus.steps.WrapInFunction"),
+    SplitStrings   = require("prometheus.steps.SplitStrings"),
 	
 	-- NEW: Decoder-proof bytecode VM
 	DecoderProof = require("prometheus.steps.DecoderProof"),
