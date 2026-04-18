@@ -35,7 +35,7 @@ return function(self, statement, funcDepth)
         local primaryExpr = statement.lhs;
         if primaryExpr.scope.isGlobal then
             local tmpReg = self:allocRegister(false);
-            self:addStatement(self:setRegister(scope, tmpReg, Ast.StringExpression(primaryExpr.scope:getVariableName(primaryExpr.id))), {tmpReg}, {}, false);
+            self:addStatement(self:setRegister(scope, tmpReg, self:opaqueStringExpr(scope, primaryExpr.scope:getVariableName(primaryExpr.id))), {tmpReg}, {}, false);
             self:addStatement(compoundConstructor(Ast.AssignmentIndexing(self:env(scope), self:register(scope, tmpReg)),
              self:register(scope, valueReg)), {}, {tmpReg, valueReg}, true);
             self:freeRegister(tmpReg, false);

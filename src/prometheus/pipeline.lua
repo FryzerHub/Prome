@@ -113,6 +113,7 @@ function Pipeline:getSteps()
 	return self.steps;
 end
 
+
 function Pipeline:setOption(name, _)
 	assert(false, "TODO");
 	if(Pipeline.DefaultSettings[name] ~= nil) then
@@ -166,7 +167,14 @@ function Pipeline:apply(code, filename)
 	else
 		--> use secure random number generator
 		local success, seed = pcall(function()
-			local seedStr =  io.popen("openssl rand -hex 12"):read("*a"):gsub("\n", "")..""
+			local cmd;
+			if isWindows then
+				-- Suppress noisy "not recognized" output on Windows when openssl is absent.
+				cmd = "openssl rand -hex 12 2>nul";
+			else
+				cmd = "openssl rand -hex 12 2>/dev/null";
+			end
+			local seedStr = io.popen(cmd):read("*a"):gsub("\n", "")..""
 			local seedNum = 0;
 
 			--> NOTE: tonumber caps at 1.844674407371e+19. So we use this instead.

@@ -152,7 +152,9 @@ function NumbersToExpressions:CreateNumberExpression(val, depth)
 
 			local exp = math.floor(math.log10(math.abs(val)))
 			local mantissa = val / (10 ^ exp)
-			return Ast.NumberExpression(string.format("%.15ge%d", mantissa, exp))
+			-- Avoid double-exponent formatting (e.g. "1e+3e2") by controlling the mantissa explicitly.
+			-- Lua accepts forms like "1.23e4" across versions.
+			return Ast.NumberExpression(string.format("%.15f", mantissa) .. "e" .. tostring(exp))
 		end
 
 		if format == "normal" then

@@ -125,9 +125,9 @@ return function(Compiler)
                     });
                 });
                 Ast.AssignmentStatement({
-                    Ast.AssignmentIndexing(Ast.VariableExpression(ifScope, metatableVar), Ast.StringExpression("__index")),
-                    Ast.AssignmentIndexing(Ast.VariableExpression(ifScope, metatableVar), Ast.StringExpression("__gc")),
-                    Ast.AssignmentIndexing(Ast.VariableExpression(ifScope, metatableVar), Ast.StringExpression("__len")),
+                    Ast.AssignmentIndexing(Ast.VariableExpression(ifScope, metatableVar), self:opaqueStringExpr(ifScope, "__index")),
+                    Ast.AssignmentIndexing(Ast.VariableExpression(ifScope, metatableVar), self:opaqueStringExpr(ifScope, "__gc")),
+                    Ast.AssignmentIndexing(Ast.VariableExpression(ifScope, metatableVar), self:opaqueStringExpr(ifScope, "__len")),
                 }, {
                     Ast.VariableExpression(scope, entriesVar),
                     Ast.VariableExpression(self.scope, self.upvaluesGcFunctionVar),
@@ -142,9 +142,9 @@ return function(Compiler)
                 Ast.ReturnStatement({Ast.FunctionCallExpression(Ast.VariableExpression(self.scope, self.setmetatableVar), {
                     Ast.TableConstructorExpression({}),
                     Ast.TableConstructorExpression({
-                        Ast.KeyedTableEntry(Ast.StringExpression("__gc"), Ast.VariableExpression(self.scope, self.upvaluesGcFunctionVar)),
-                        Ast.KeyedTableEntry(Ast.StringExpression("__index"), Ast.VariableExpression(scope, entriesVar)),
-                        Ast.KeyedTableEntry(Ast.StringExpression("__len"), Ast.FunctionLiteralExpression({}, Ast.Block({
+                        Ast.KeyedTableEntry(self:opaqueStringExpr(elseScope, "__gc"), Ast.VariableExpression(self.scope, self.upvaluesGcFunctionVar)),
+                        Ast.KeyedTableEntry(self:opaqueStringExpr(elseScope, "__index"), Ast.VariableExpression(scope, entriesVar)),
+                        Ast.KeyedTableEntry(self:opaqueStringExpr(elseScope, "__len"), Ast.FunctionLiteralExpression({}, Ast.Block({
                             Ast.ReturnStatement({Ast.NumberExpression(self.upvalsProxyLenReturn)})
                         }, Scope:new(ifScope)))),
                     })

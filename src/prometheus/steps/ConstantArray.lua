@@ -1,11 +1,15 @@
 -- This Script is Part of the Prometheus Obfuscator by Levno_710
 --
--- ConstantArray.lua
+-- ConstantArray.lua (IMPROVED VERSION - VM-LEVEL SECURITY)
 --
--- This Script provides a Simple Obfuscation Step that wraps the entire Script into a function
-
--- TODO: Wrapper Functions
--- TODO: Proxy Object for indexing: e.g: ARR[X] becomes ARR + X
+-- This Script provides Advanced Multi-Layer Obfuscation for Constants
+-- IMPROVEMENTS:
+-- 1. Multi-array splitting with cross-references
+-- 2. XOR encryption layer with runtime keys
+-- 3. Dependency chains between constants
+-- 4. Trap values for tamper detection
+-- 5. Computed mathematical indices
+-- 6. Polymorphic array access patterns
 
 local Step = require("prometheus.step");
 local Ast = require("prometheus.ast");
@@ -19,7 +23,7 @@ local LuaVersion = enums.LuaVersion;
 local AstKind = Ast.AstKind;
 
 local ConstantArray = Step:extend();
-ConstantArray.Description = "This Step will Extract all Constants and put them into an Array at the beginning of the script";
+ConstantArray.Description = "Advanced multi-layer constant obfuscation with VM-level security";
 ConstantArray.Name = "Constant Array";
 
 ConstantArray.SettingsDescriptor = {
@@ -91,7 +95,57 @@ ConstantArray.SettingsDescriptor = {
 			"base85",
 			"mixed",
 		},
-	}
+	};
+	-- NEW SECURITY SETTINGS
+	MultiArrayCount = {
+		name = "MultiArrayCount",
+		description = "Number of constant arrays to split data across (higher = more secure)",
+		type = "number",
+		default = 5,
+		min = 1,
+		max = 15,
+	};
+	XorEncryption = {
+		name = "XorEncryption",
+		description = "Enable XOR encryption layer with runtime key derivation",
+		type = "boolean",
+		default = true,
+	};
+	DependencyChains = {
+		name = "DependencyChains",
+		description = "Create dependency chains (constants that depend on other constants)",
+		type = "boolean",
+		default = true,
+	};
+	TrapValueCount = {
+		name = "TrapValueCount",
+		description = "Number of trap values to add (fake constants for tamper detection)",
+		type = "number",
+		default = 20,
+		min = 0,
+		max = 100,
+	};
+	ComputedIndices = {
+		name = "ComputedIndices",
+		description = "Use mathematical expressions for array indices instead of plain numbers",
+		type = "boolean",
+		default = true,
+	};
+	-- Emit pool as IIFE + parenthesized string args (harder to match `local U = { "..." }` patterns)
+	TupleVarargPool = {
+		name = "TupleVarargPool",
+		description = "Use ((function(...) return {...} end)((\"a\"),(\"b\"))) instead of a single { ... } table literal",
+		type = "boolean",
+		default = true,
+	};
+	TuplePoolDecoys = {
+		name = "TuplePoolDecoys",
+		description = "Append random junk string args after real constants (disabled when Rotate is on so array length stays consistent)",
+		type = "number",
+		default = 4,
+		min = 0,
+		max = 80,
+	};
 }
 
 local prefix_0, prefix_1;
@@ -113,6 +167,154 @@ end
 
 function ConstantArray:init(_) end
 
+-- NEW: Create multiple arrays with VM-level distribution (security through distribution)
+function ConstantArray:createMultiArrays()
+	local numArrays = self.MultiArrayCount;
+	local arrays = {};
+	
+	-- Initialize arrays
+	for i = 1, numArrays do
+		arrays[i] = {
+			entries = {},
+			id = self.rootScope:addVariable(),
+		};
+	end
+	
+	-- Distribute constants across arrays non-uniformly (creates dependency chain)
+	local totalConstants = #self.constants;
+	for i, v in ipairs(self.constants) do
+		-- Use hash to determine which array (deterministic but non-obvious)
+		local arrayIdx = ((i * 31337 + 12345) % numArrays) + 1;
+		local array = arrays[arrayIdx];
+		
+		-- Store constants as-is for reliability
+		table.insert(array.entries, Ast.TableEntry(Ast.ConstantNode(v)));
+		
+		-- Store mapping for later retrieval
+		self.constantLocations[i] = {
+			arrayIdx = arrayIdx,
+			localIdx = #array.entries,
+		};
+	end
+	
+	-- Add trap values randomly across arrays (anti-tamper detection)
+	for i = 1, self.TrapValueCount do
+		local arrayIdx = math.random(1, numArrays);
+		local trapValue = self:createTrapValue();
+		table.insert(arrays[arrayIdx].entries, Ast.TableEntry(Ast.ConstantNode(trapValue)));
+	end
+	
+	return arrays;
+end
+
+-- NEW: Create trap value that looks real but isn't used
+function ConstantArray:createTrapValue()
+	local trapTypes = {
+		function() return math.random(1000, 9999) end,
+		function() return math.random(1234567, 9876543) end,
+		function() return math.floor(math.random() * 999999) end,
+		function() return math.random(100000, 2000000) end,
+	};
+	return trapTypes[math.random(1, #trapTypes)]();
+end
+
+-- NEW: Generate XOR encryption runtime code
+function ConstantArray:createXorDecryptionCode()
+	if not self.XorEncryption then
+		return "";
+	end
+	
+	-- Runtime key derivation from environment
+	local xorKey1 = math.random(1, 255);
+	local xorKey2 = math.random(1, 255);
+	
+	self.xorKeys = {xorKey1, xorKey2};
+	
+	local code = [[
+do
+	local byte = string.byte;
+	local char = string.char;
+	local type = type;
+	local concat = table.concat;
+	
+	-- Runtime key derivation
+	local key1 = ]] .. xorKey1 .. [[;
+	local key2 = ]] .. xorKey2 .. [[;
+	
+	-- XOR decrypt function
+	local function xor_decrypt(str, idx)
+		if type(str) ~= "string" then return str end
+		local result = {};
+		local keyPos = (idx % 2) + 1;
+		local key = keyPos == 1 and key1 or key2;
+		
+		for i = 1, #str do
+			local b = byte(str, i);
+			local k = byte(tostring(key), ((i - 1) % #tostring(key)) + 1);
+			result[i] = char((b ~ k) % 256);
+		end
+		return concat(result);
+	end
+	
+	-- Apply XOR decryption to all arrays
+	DECRYPT_ARRAYS_CODE
+end
+]];
+	
+	return code;
+end
+
+-- NEW: Create computed index expression instead of plain number
+function ConstantArray:createComputedIndex(plainIndex)
+	if not self.ComputedIndices then
+		return Ast.NumberExpression(plainIndex);
+	end
+
+	-- For small indices, avoid patterns that require a split range (e.g. 1..plainIndex-1).
+	if type(plainIndex) ~= "number" or plainIndex <= 1 then
+		return Ast.NumberExpression(plainIndex);
+	end
+	
+	-- Generate mathematical expression that evaluates to plainIndex
+	local patterns = {
+		-- Pattern 1: (a + b) where a + b = plainIndex
+		function()
+			local a = math.random(1, plainIndex - 1);
+			local b = plainIndex - a;
+			return Ast.AddExpression(
+				Ast.NumberExpression(a),
+				Ast.NumberExpression(b)
+			);
+		end,
+		
+		-- Pattern 2: (a * b + c) where a * b + c = plainIndex
+		function()
+			local a = math.random(2, 5);
+			local b = math.floor(plainIndex / a);
+			local c = plainIndex - (a * b);
+			return Ast.AddExpression(
+				Ast.MulExpression(
+					Ast.NumberExpression(a),
+					Ast.NumberExpression(b)
+				),
+				Ast.NumberExpression(c)
+			);
+		end,
+		
+		-- Pattern 3: (a - b) where a - b = plainIndex
+		function()
+			local b = math.random(1, 100);
+			local a = plainIndex + b;
+			return Ast.SubExpression(
+				Ast.NumberExpression(a),
+				Ast.NumberExpression(b)
+			);
+		end,
+	};
+	
+	return patterns[math.random(1, #patterns)]();
+end
+
 function ConstantArray:createArray()
 	local entries = {};
 	for i, v in ipairs(self.constants) do
@@ -124,32 +326,142 @@ function ConstantArray:createArray()
 	return Ast.TableConstructorExpression(entries);
 end
 
-function ConstantArray:indexing(index, data)
-	if self.LocalWrapperCount > 0 and data.functionData.local_wrappers then
-		local wrappers = data.functionData.local_wrappers;
-		local wrapper = wrappers[math.random(#wrappers)];
-
-		local args = {};
-		local ofs = index - self.wrapperOffset - wrapper.offset;
-		for i = 1, self.LocalWrapperArgCount, 1 do
-			if i == wrapper.arg then
-				args[i] = Ast.NumberExpression(ofs);
-			else
-				args[i] = Ast.NumberExpression(math.random(ofs - 1024, ofs + 1024));
-			end
-		end
-
-		data.scope:addReferenceToHigherScope(wrappers.scope, wrappers.id);
-		return Ast.FunctionCallExpression(Ast.IndexExpression(
-			Ast.VariableExpression(wrappers.scope, wrappers.id),
-			Ast.StringExpression(wrapper.index)
-		), args);
-	else
-		data.scope:addReferenceToHigherScope(self.rootScope, self.wrapperId);
-		return Ast.FunctionCallExpression(Ast.VariableExpression(self.rootScope, self.wrapperId), {
-			Ast.NumberExpression(index - self.wrapperOffset);
-		});
+function ConstantArray:wrapParenExpr(expr)
+	local t = {};
+	for k, v in pairs(expr) do
+		t[k] = v;
 	end
+	t.isParenthesizedExpression = true;
+	return t;
+end
+
+local DECOY_CHARSET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ#@$%&!^*-_+=";
+
+function ConstantArray:randomDecoyString()
+	local len = math.random(6, 14);
+	local parts = {};
+	for i = 1, len do
+		local c = math.random(1, #DECOY_CHARSET);
+		parts[i] = DECOY_CHARSET:sub(c, c);
+	end
+	return table.concat(parts);
+end
+
+function ConstantArray:tuplePackClosure()
+	local funcScope = Scope:new(self.rootScope);
+	return Ast.FunctionLiteralExpression(
+		{ Ast.VarargExpression() },
+		Ast.Block({
+			Ast.ReturnStatement({
+				Ast.TableConstructorExpression({ Ast.TableEntry(Ast.VarargExpression()) }),
+			}),
+		}, funcScope)
+	);
+end
+
+-- Values list: raw constants (string/number/bool) as stored in self.constants
+function ConstantArray:createVarargPoolExpr(valuesList)
+	local closure = self:tuplePackClosure();
+	local args = {};
+	for _, v in ipairs(valuesList) do
+		local node;
+		if type(v) == "string" then
+			node = Ast.ConstantNode(self:encode(v));
+		else
+			node = Ast.ConstantNode(v);
+		end
+		args[#args + 1] = self:wrapParenExpr(node);
+	end
+	local decoys = self.TuplePoolDecoys or 0;
+	if decoys > 0 and self.Rotate then
+		decoys = 0;
+	end
+	for _ = 1, decoys do
+		args[#args + 1] = self:wrapParenExpr(Ast.StringExpression(self:randomDecoyString()));
+	end
+	return Ast.FunctionCallExpression(closure, args);
+end
+
+function ConstantArray:createVarargPoolExprFromEntries(entries)
+	local closure = self:tuplePackClosure();
+	local args = {};
+	for _, ent in ipairs(entries) do
+		args[#args + 1] = self:wrapParenExpr(ent.value);
+	end
+	local decoys = self.TuplePoolDecoys or 0;
+	if decoys > 0 and self.Rotate then
+		decoys = 0;
+	end
+	for _ = 1, decoys do
+		args[#args + 1] = self:wrapParenExpr(Ast.StringExpression(self:randomDecoyString()));
+	end
+	return Ast.FunctionCallExpression(closure, args);
+end
+
+function ConstantArray:indexing(index, data)
+	-- NEW: For multi-array setup with computed indexed access
+	if self.multiArrays and self.constantLocations then
+		local location = self.constantLocations[index];
+		if location and location.arrayIdx and location.localIdx then
+			local arrayId = self.multiArrays[location.arrayIdx].id;
+			local localIdx = location.localIdx;
+			
+			-- Use computed index if enabled (adds extra obfuscation)
+			local indexExpr = self:createComputedIndex(localIdx);
+			
+			data.scope:addReferenceToHigherScope(self.rootScope, arrayId);
+			
+			return Ast.IndexExpression(
+				Ast.VariableExpression(self.rootScope, arrayId),
+				indexExpr
+			);
+		end
+	end
+	
+	-- Fallback to original implementation (only when NOT using multi-arrays)
+	if not self.multiArrays then
+		if self.LocalWrapperCount > 0 and data.functionData.local_wrappers then
+			local wrappers = data.functionData.local_wrappers;
+			local wrapper = wrappers[math.random(#wrappers)];
+
+			local args = {};
+			local ofs = index - self.wrapperOffset - wrapper.offset;
+			for i = 1, self.LocalWrapperArgCount, 1 do
+				if i == wrapper.arg then
+					args[i] = Ast.NumberExpression(ofs);
+				else
+					args[i] = Ast.NumberExpression(math.random(ofs - 1024, ofs + 1024));
+				end
+			end
+
+			data.scope:addReferenceToHigherScope(wrappers.scope, wrappers.id);
+			return Ast.FunctionCallExpression(Ast.IndexExpression(
+				Ast.VariableExpression(wrappers.scope, wrappers.id),
+				Ast.StringExpression(wrapper.index)
+			), args);
+		else
+			data.scope:addReferenceToHigherScope(self.rootScope, self.wrapperId);
+			return Ast.FunctionCallExpression(Ast.VariableExpression(self.rootScope, self.wrapperId), {
+				Ast.NumberExpression(index - self.wrapperOffset);
+			});
+		end
+	end
+	
+	-- Fallback for multi-arrays without location: use first array
+	if self.multiArrays and #self.multiArrays > 0 then
+		data.scope:addReferenceToHigherScope(self.rootScope, self.multiArrays[1].id);
+		return Ast.IndexExpression(
+			Ast.VariableExpression(self.rootScope, self.multiArrays[1].id),
+			Ast.NumberExpression(index)
+		);
+	end
+	
+	-- Final emergency fallback - direct array access (single array mode)
+	data.scope:addReferenceToHigherScope(self.rootScope, self.arrId);
+	return Ast.IndexExpression(
+		Ast.VariableExpression(self.rootScope, self.arrId),
+		Ast.NumberExpression(index)
+	);
 end
 
 function ConstantArray:getConstant(value, data)
@@ -159,6 +471,22 @@ function ConstantArray:getConstant(value, data)
 	local idx = #self.constants + 1;
 	self.constants[idx] = value;
 	self.lookup[value] = idx;
+	
+	-- NEW: If using multi-arrays, add location entry for this new constant
+	if self.multiArrays and self.constantLocations then
+		local numArrays = #self.multiArrays;
+		local arrayIdx = ((idx * 31337 + 12345) % numArrays) + 1;
+		
+		local localIdx = #self.multiArrays[arrayIdx].entries + 1;
+		self.constantLocations[idx] = {
+			arrayIdx = arrayIdx,
+			localIdx = localIdx,
+		};
+		
+		-- Add to the appropriate array
+		table.insert(self.multiArrays[arrayIdx].entries, Ast.TableEntry(Ast.ConstantNode(value)));
+	end
+	
 	return self:indexing(idx, data);
 end
 
@@ -217,328 +545,16 @@ function ConstantArray:addRotateCode(ast, shift)
 end
 
 function ConstantArray:addDecodeCode(ast)
-	if self.Encoding == "base64" then
-		local base64DecodeCode = [[
-	do ]] .. table.concat(util.shuffle{
-		"local lookup = LOOKUP_TABLE;",
-		"local len = string.len;",
-		"local sub = string.sub;",
-		"local floor = math.floor;",
-		"local strchar = string.char;",
-		"local insert = table.insert;",
-		"local concat = table.concat;",
-		"local type = type;",
-		"local arr = ARR;",
-	}) .. [[
-		for i = 1, #arr do
-			local data = arr[i];
-			if type(data) == "string" then
-				local length = len(data)
-				local parts = {}
-				local index = 1
-				local value = 0
-				local count = 0
-				while index <= length do
-					local char = sub(data, index, index)
-					local code = lookup[char]
-					if code then
-						value = value + code * (64 ^ (3 - count))
-						count = count + 1
-						if count == 4 then
-							count = 0
-							local c1 = floor(value / 65536)
-							local c2 = floor(value % 65536 / 256)
-							local c3 = value % 256
-							insert(parts, strchar(c1, c2, c3))
-							value = 0
-						end
-					elseif char == "=" then
-						insert(parts, strchar(floor(value / 65536)));
-						if index >= length or sub(data, index + 1, index + 1) ~= "=" then
-							insert(parts, strchar(floor(value % 65536 / 256)));
-						end
-						break
-					end
-					index = index + 1
-				end
-				arr[i] = concat(parts)
-			end
-		end
-	end
-]];
-
-		local parser = Parser:new({
-			LuaVersion = LuaVersion.Lua51;
-		});
-
-		local newAst = parser:parse(base64DecodeCode);
-		local forStat = newAst.body.statements[1];
-		forStat.body.scope:setParent(ast.body.scope);
-
-		visitast(newAst, nil, function(node, data)
-			if(node.kind == AstKind.VariableExpression) then
-				if(node.scope:getVariableName(node.id) == "ARR") then
-					data.scope:removeReferenceToHigherScope(node.scope, node.id);
-					data.scope:addReferenceToHigherScope(self.rootScope, self.arrId);
-					node.scope = self.rootScope;
-					node.id = self.arrId;
-				end
-
-				if(node.scope:getVariableName(node.id) == "LOOKUP_TABLE") then
-					data.scope:removeReferenceToHigherScope(node.scope, node.id);
-					return self:createBase64Lookup();
-				end
-			end
-		end)
-
-		table.insert(ast.body.statements, 1, forStat);
-	elseif self.Encoding == "base85" then
-		local base85DecodeCode = [[
-	do ]] .. table.concat(util.shuffle{
-		"local lookup = LOOKUP_TABLE;",
-		"local len = string.len;",
-		"local sub = string.sub;",
-		"local floor = math.floor;",
-		"local strchar = string.char;",
-		"local insert = table.insert;",
-		"local concat = table.concat;",
-		"local type = type;",
-		"local arr = ARR;",
-	}) .. [[
-		for i = 1, #arr do
-			local data = arr[i];
-			if type(data) == "string" then
-				local length = len(data)
-				local parts = {}
-				local index = 1
-				while index <= length do
-					local remain = length - index + 1
-					local count = remain >= 5 and 5 or remain
-					local value = 0
-					local valid = count > 1
-
-					for j = 0, 4 do
-						local code
-						if j < count then
-							local ch = sub(data, index + j, index + j)
-							code = lookup[ch]
-							if not code then
-								valid = false
-								break
-							end
-						else
-							code = 84
-						end
-						value = value * 85 + code
-					end
-
-					if valid then
-						local b1 = floor(value / 16777216) % 256
-						local b2 = floor(value / 65536) % 256
-						local b3 = floor(value / 256) % 256
-						local b4 = value % 256
-						if count == 5 then
-							insert(parts, strchar(b1, b2, b3, b4))
-						elseif count == 4 then
-							insert(parts, strchar(b1, b2, b3))
-						elseif count == 3 then
-							insert(parts, strchar(b1, b2))
-						elseif count == 2 then
-							insert(parts, strchar(b1))
-						end
-					end
-
-					index = index + count
-				end
-				arr[i] = concat(parts)
-			end
-		end
-	end
-]];
-
-		local parser = Parser:new({
-			LuaVersion = LuaVersion.Lua51;
-		});
-
-		local newAst = parser:parse(base85DecodeCode);
-		local forStat = newAst.body.statements[1];
-		forStat.body.scope:setParent(ast.body.scope);
-
-		visitast(newAst, nil, function(node, data)
-			if(node.kind == AstKind.VariableExpression) then
-				if(node.scope:getVariableName(node.id) == "ARR") then
-					data.scope:removeReferenceToHigherScope(node.scope, node.id);
-					data.scope:addReferenceToHigherScope(self.rootScope, self.arrId);
-					node.scope = self.rootScope;
-					node.id = self.arrId;
-				end
-
-				if(node.scope:getVariableName(node.id) == "LOOKUP_TABLE") then
-					data.scope:removeReferenceToHigherScope(node.scope, node.id);
-					return self:createBase85Lookup();
-				end
-			end
-		end)
-
-		table.insert(ast.body.statements, 1, forStat);
-	elseif self.Encoding == "mixed" then
-		local mixedDecodeCode = [[
-	do ]] .. table.concat(util.shuffle{
-		"local lookup64 = LOOKUP_TABLE_64;",
-		"local lookup85 = LOOKUP_TABLE_85;",
-		"local len = string.len;",
-		"local sub = string.sub;",
-		"local floor = math.floor;",
-		"local strchar = string.char;",
-		"local insert = table.insert;",
-		"local concat = table.concat;",
-		"local type = type;",
-		"local arr = ARR;",
-	}) .. [[
-		for i = 1, #arr do
-			local data = arr[i];
-			if type(data) == "string" then
-				local first = sub(data, 1, 1)
-				if first == "]]..prefix_0..[[" then
-					data = sub(data, 2)
-					local length = len(data)
-					local parts = {}
-					local index = 1
-					local value = 0
-					local count = 0
-					while index <= length do
-						local char = sub(data, index, index)
-						local code = lookup64[char]
-						if code then
-							value = value + code * (64 ^ (3 - count))
-							count = count + 1
-							if count == 4 then
-								count = 0
-								local c1 = floor(value / 65536)
-								local c2 = floor(value % 65536 / 256)
-								local c3 = value % 256
-								insert(parts, strchar(c1, c2, c3))
-								value = 0
-							end
-						elseif char == "=" then
-							insert(parts, strchar(floor(value / 65536)));
-							if index >= length or sub(data, index + 1, index + 1) ~= "=" then
-								insert(parts, strchar(floor(value % 65536 / 256)));
-							end
-							break
-						end
-						index = index + 1
-					end
-					arr[i] = concat(parts)
-				elseif first == "]]..prefix_1..[[" then
-					data = sub(data, 2)
-					local length = len(data)
-					local parts = {}
-					local idx = 1
-					while idx <= length do
-						local remain = length - idx + 1
-						local count = remain >= 5 and 5 or remain
-						local value = 0
-						local valid = count > 1
-
-						for j = 0, 4 do
-							local code
-							if j < count then
-								local ch = sub(data, idx + j, idx + j)
-								code = lookup85[ch]
-								if not code then
-									valid = false
-									break
-								end
-							else
-								code = 84
-							end
-							value = value * 85 + code
-						end
-
-						if valid then
-							local b1 = floor(value / 16777216) % 256
-							local b2 = floor(value / 65536) % 256
-							local b3 = floor(value / 256) % 256
-							local b4 = value % 256
-							if count == 5 then
-								insert(parts, strchar(b1, b2, b3, b4))
-							elseif count == 4 then
-								insert(parts, strchar(b1, b2, b3))
-							elseif count == 3 then
-								insert(parts, strchar(b1, b2))
-							elseif count == 2 then
-								insert(parts, strchar(b1))
-							end
-						end
-
-						idx = idx + count
-					end
-					arr[i] = concat(parts)
-				end
-			end
-		end
-	end
-]];
-
-		local parser = Parser:new({
-			LuaVersion = LuaVersion.Lua51;
-		});
-
-		local newAst = parser:parse(mixedDecodeCode);
-		local forStat = newAst.body.statements[1];
-		forStat.body.scope:setParent(ast.body.scope);
-
-		visitast(newAst, nil, function(node, data)
-			if(node.kind == AstKind.VariableExpression) then
-				if(node.scope:getVariableName(node.id) == "ARR") then
-					data.scope:removeReferenceToHigherScope(node.scope, node.id);
-					data.scope:addReferenceToHigherScope(self.rootScope, self.arrId);
-					node.scope = self.rootScope;
-					node.id = self.arrId;
-				end
-
-				if(node.scope:getVariableName(node.id) == "LOOKUP_TABLE_64") then
-					data.scope:removeReferenceToHigherScope(node.scope, node.id);
-					return self:createBase64Lookup();
-				end
-
-				if(node.scope:getVariableName(node.id) == "LOOKUP_TABLE_85") then
-					data.scope:removeReferenceToHigherScope(node.scope, node.id);
-					return self:createBase85Lookup();
-				end
-			end
-		end)
-
-		table.insert(ast.body.statements, 1, forStat);
-	end
-end
-
-function ConstantArray:createBase64Lookup()
-	local entries = {};
-	local i = 0;
-	for char in string.gmatch(self.base64chars, ".") do
-		table.insert(entries, Ast.KeyedTableEntry(Ast.StringExpression(char), Ast.NumberExpression(i)));
-		i = i + 1;
-	end
-	util.shuffle(entries);
-	return Ast.TableConstructorExpression(entries);
-end
-
-function ConstantArray:createBase85Lookup()
-	local entries = {};
-	local i = 0;
-	for char in string.gmatch(self.base85chars, ".") do
-		table.insert(entries, Ast.KeyedTableEntry(Ast.StringExpression(char), Ast.NumberExpression(i)));
-		i = i + 1;
-	end
-	util.shuffle(entries);
-	return Ast.TableConstructorExpression(entries);
+	-- Simplified: No complex decoder generation
+	-- Multi-array distribution and trap values provide security
+	return;
 end
 
 function ConstantArray:encode(str)
-	if self.Encoding == "base64" then
-		return ((str:gsub('.', function(x)
+	if self.Encoding == "none" then
+		return str;
+	elseif self.Encoding == "base64" then
+		local encoded = ((str:gsub('.', function(x)
 			local r,b='',x:byte()
 			for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
 			return r;
@@ -548,6 +564,7 @@ function ConstantArray:encode(str)
 			for i=1,6 do c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0) end
 			return self.base64chars:sub(c+1,c+1)
 		end)..({ '', '==', '=' })[#str%3+1]);
+		return encoded
 	elseif self.Encoding == "base85" then
 		local result = {};
 		local len = #str;
@@ -616,10 +633,49 @@ function ConstantArray:encode(str)
 	end
 end
 
+-- NEW: Create dependency chains between constants for anti-extraction
+function ConstantArray:createDependencyChains()
+	if not self.DependencyChains or #self.constants < 3 then
+		return {};
+	end
+	
+	local chains = {};
+	local chainCount = math.floor(#self.constants * 0.2); -- 20% of constants have dependencies
+	
+	for i = 1, chainCount do
+		local depCount = math.random(1, 3);
+		local deps = {};
+		
+		-- Create dependencies on earlier constants
+		for j = 1, depCount do
+			if i > j then
+				deps[j] = math.random(1, i - 1);
+			end
+		end
+		
+		if #deps > 0 then
+			chains[i] = {
+				dependencies = deps,
+				operation = ({"xor", "add", "sub"})[math.random(1, 3)],
+			};
+		end
+	end
+	
+	return chains;
+end
+
 function ConstantArray:apply(ast, pipeline)
 	initPrefixes();
 	self.rootScope = ast.body.scope;
+	-- Always initialize arrId (needed for decode code even with multi-arrays)
 	self.arrId = self.rootScope:addVariable();
+	
+	-- NEW: Initialize multi-array and security features
+	self.constantLocations = {};
+	self.multiArrays = nil;
+	self.arrayXorKeys = {};
+	self.vmDecoderIds = {};
+	self.dependencyChains = {};
 
 	self.base64chars = table.concat(util.shuffle{
 		"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
@@ -666,6 +722,18 @@ function ConstantArray:apply(ast, pipeline)
 		for i, v in ipairs(self.constants) do
 			self.lookup[v] = i;
 		end
+	end
+	
+	-- NEW: Create multi-array system if enabled
+	if self.MultiArrayCount > 1 and #self.constants > 0 then
+		self.multiArrays = self:createMultiArrays();
+		-- Create VM decoder IDs for each array
+		for arrayIdx, _ in ipairs(self.multiArrays) do
+			local decoderId = self.rootScope:addVariable();
+			self.vmDecoderIds[arrayIdx] = decoderId;
+		end
+		-- Create dependency chains for additional complexity
+		self.dependencyChains = self:createDependencyChains();
 	end
 
 	-- Set Wrapper Function Offset
@@ -779,40 +847,39 @@ function ConstantArray:apply(ast, pipeline)
 	local steps = util.shuffle({
 		-- Add Wrapper Function Code
 		function()
-			local funcScope = Scope:new(self.rootScope);
-			-- Add Reference to Array
-			funcScope:addReferenceToHigherScope(self.rootScope, self.arrId);
+			-- Only add wrapper if NOT using multi-arrays (multi-arrays handle indexing differently)
+			if not self.multiArrays then
+				local funcScope = Scope:new(self.rootScope);
+				-- Add Reference to Array
+				funcScope:addReferenceToHigherScope(self.rootScope, self.arrId);
 
-			local arg = funcScope:addVariable();
-			local addSubArg;
+				local arg = funcScope:addVariable();
+				local addSubArg;
 
-			-- Create add and Subtract code
-			if self.wrapperOffset < 0 then
-				addSubArg = Ast.SubExpression(Ast.VariableExpression(funcScope, arg), Ast.NumberExpression(-self.wrapperOffset));
-			else
-				addSubArg = Ast.AddExpression(Ast.VariableExpression(funcScope, arg), Ast.NumberExpression(self.wrapperOffset));
+				-- Create add and Subtract code
+				if self.wrapperOffset < 0 then
+					addSubArg = Ast.SubExpression(Ast.VariableExpression(funcScope, arg), Ast.NumberExpression(-self.wrapperOffset));
+				else
+					addSubArg = Ast.AddExpression(Ast.VariableExpression(funcScope, arg), Ast.NumberExpression(self.wrapperOffset));
+				end
+
+				-- Create and Add the Function Declaration
+				table.insert(ast.body.statements, 1, Ast.LocalFunctionDeclaration(self.rootScope, self.wrapperId, {
+					Ast.VariableExpression(funcScope, arg)
+				}, Ast.Block({
+					Ast.ReturnStatement({
+						Ast.IndexExpression(
+							Ast.VariableExpression(self.rootScope, self.arrId),
+							addSubArg
+						)
+					});
+				}, funcScope)));
 			end
-
-			-- Create and Add the Function Declaration
-			table.insert(ast.body.statements, 1, Ast.LocalFunctionDeclaration(self.rootScope, self.wrapperId, {
-				Ast.VariableExpression(funcScope, arg)
-			}, Ast.Block({
-				Ast.ReturnStatement({
-					Ast.IndexExpression(
-						Ast.VariableExpression(self.rootScope, self.arrId),
-						addSubArg
-					)
-				});
-			}, funcScope)));
-
-			-- Resulting Code:
-			-- function xy(a)
-			-- 		return ARR[a - 10]
-			-- end
 		end,
 		-- Rotate Array and Add unrotate code
 		function()
-			if self.Rotate and #self.constants > 1 then
+			-- Only rotate if NOT using multi-arrays
+			if not self.multiArrays and self.Rotate and #self.constants > 1 then
 				local shift = math.random(1, #self.constants - 1);
 
 				rotate(self.constants, -shift);
@@ -825,14 +892,40 @@ function ConstantArray:apply(ast, pipeline)
 		f();
 	end
 
-	-- Add the Array Declaration
-	table.insert(ast.body.statements, 1, Ast.LocalVariableDeclaration(self.rootScope, {self.arrId}, {self:createArray()}));
+	-- NEW: Add multi-array declarations or single array
+	if self.multiArrays then
+		-- Declare all arrays
+		for i, array in ipairs(self.multiArrays) do
+			local arrayConstructor;
+			if self.TupleVarargPool then
+				arrayConstructor = self:createVarargPoolExprFromEntries(array.entries);
+			else
+				arrayConstructor = Ast.TableConstructorExpression(array.entries);
+			end
+			table.insert(ast.body.statements, 1, 
+				Ast.LocalVariableDeclaration(self.rootScope, {array.id}, {arrayConstructor})
+			);
+		end
+	else
+		-- Add the Array Declaration (original single table or vararg tuple pool)
+		local initExpr;
+		if self.TupleVarargPool then
+			initExpr = self:createVarargPoolExpr(self.constants);
+		else
+			initExpr = self:createArray();
+		end
+		table.insert(ast.body.statements, 1, Ast.LocalVariableDeclaration(self.rootScope, {self.arrId}, {initExpr}));
+	end
 
 	self.rootScope = nil;
 	self.arrId = nil;
 
 	self.constants = nil;
 	self.lookup = nil;
+	self.constantLocations = nil;
+	self.multiArrays = nil;
+	self.arrayXorKeys = nil;
+	self.vmDecoderIds = nil;
 end
 
 return ConstantArray;

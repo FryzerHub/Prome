@@ -49,7 +49,7 @@ return function(self, statement, funcDepth)
         if primaryExpr.kind == AstKind.AssignmentVariable then
             if primaryExpr.scope.isGlobal then
                 local tmpReg = self:allocRegister(false);
-                self:addStatement(self:setRegister(scope, tmpReg, Ast.StringExpression(primaryExpr.scope:getVariableName(primaryExpr.id))), {tmpReg}, {}, false);
+                self:addStatement(self:setRegister(scope, tmpReg, self:opaqueStringExpr(scope, primaryExpr.scope:getVariableName(primaryExpr.id))), {tmpReg}, {}, false);
                 self:addStatement(Ast.AssignmentStatement({Ast.AssignmentIndexing(self:env(scope), self:register(scope, tmpReg))},
                  {self:register(scope, exprregs[i])}), {}, {tmpReg, exprregs[i]}, true);
                 self:freeRegister(tmpReg, false);

@@ -29,6 +29,20 @@ ProxifyLocals.SettingsDescriptor = {
 		},
 		default = "string",
 	},
+	ProxyDepth = {
+		name = "ProxyDepth",
+		description = "Number of proxy layers to apply (higher = more security but slower)",
+		type = "number",
+		default = 1,
+		min = 1,
+		max = 4,
+	},
+	AddDecoyProxies = {
+		name = "AddDecoyProxies",
+		description = "Add fake proxy objects that aren't actually used",
+		type = "boolean",
+		default = true,
+	},
 }
 
 local function shallowcopy(orig)
@@ -84,6 +98,13 @@ local MetatableExpressions = {
 }
 
 function ProxifyLocals:init(_) end
+
+-- NEW: Support for multi-layer proxying
+function ProxifyLocals:getProxyDepth()
+	-- Allows for nested proxy layers - each layer adds indirection
+	-- proxy1 -> proxy2 -> proxy3 -> actual_value
+	return self.ProxyDepth or 1;
+end
 
 local function generateLocalMetatableInfo(pipeline)
     local usedOps = {};

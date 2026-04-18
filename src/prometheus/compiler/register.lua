@@ -211,6 +211,60 @@ return function(Compiler)
         return Ast.VariableExpression(self.scope, self.envVar);
     end
 
+    -- Build string without a StringExpression literal (hurts pattern-matching devirtualizers).
+    function Compiler:stringCharCallee(scope)
+        scope:addReferenceToHigherScope(self.scope, self.envVar);
+        return Ast.IndexExpression(
+            Ast.IndexExpression(self:env(scope), Ast.StringExpression("string")),
+            Ast.StringExpression("char")
+        );
+    end
+
+    function Compiler:tableConcatCallee(scope)
+        scope:addReferenceToHigherScope(self.scope, self.envVar);
+        return Ast.IndexExpression(
+            Ast.IndexExpression(self:env(scope), Ast.StringExpression("table")),
+            Ast.StringExpression("concat")
+        );
+    end
+
+    function Compiler:opaqueByteExpr(byte)
+        if self.constantPoolEncryption and byte > 2 and math.random() < 0.45 then
+            local lo = math.random(1, byte - 1);
+            return Ast.AddExpression(Ast.NumberExpression(lo), Ast.NumberExpression(byte - lo));
+        end
+        return Ast.NumberExpression(byte);
+    end
+
+    function Compiler:opaqueStringExpr(scope, s)
+        if not self.constantPoolEncryption or type(s) ~= "string" then
+            return Ast.StringExpression(s);
+        end
+        local len = #s;
+        if len == 0 then
+            return Ast.FunctionCallExpression(self:stringCharCallee(scope), {});
+        end
+        local chunkSize = 20;
+        local parts = {};
+        for offset = 1, len, chunkSize do
+            local args = {};
+            for i = offset, math.min(offset + chunkSize - 1, len) do
+                args[#args + 1] = self:opaqueByteExpr(string.byte(s, i));
+            end
+            parts[#parts + 1] = Ast.FunctionCallExpression(self:stringCharCallee(scope), args);
+        end
+        if #parts == 1 then
+            return parts[1];
+        end
+        local entries = {};
+        for i, part in ipairs(parts) do
+            entries[i] = Ast.TableEntry(part);
+        end
+        return Ast.FunctionCallExpression(self:tableConcatCallee(scope), {
+            Ast.TableConstructorExpression(entries),
+        });
+    end
+
     function Compiler:jmp(scope, to)
         scope:addReferenceToHigherScope(self.containerFuncScope, self.posVar);
         return Ast.AssignmentStatement({Ast.AssignmentVariable(self.containerFuncScope, self.posVar)},{to});

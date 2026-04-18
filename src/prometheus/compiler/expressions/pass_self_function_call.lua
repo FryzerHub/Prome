@@ -40,7 +40,7 @@ return function(self, expression, funcDepth, numReturns)
     if returnAll or numReturns > 1 then
         local tmpReg = self:allocRegister(false);
 
-        self:addStatement(self:setRegister(scope, tmpReg, Ast.StringExpression(expression.passSelfFunctionName)), {tmpReg}, {}, false);
+        self:addStatement(self:setRegister(scope, tmpReg, self:opaqueStringExpr(scope, expression.passSelfFunctionName)), {tmpReg}, {}, false);
         self:addStatement(self:setRegister(scope, tmpReg, Ast.IndexExpression(self:register(scope, baseReg), self:register(scope, tmpReg))), {tmpReg}, {baseReg, tmpReg}, false);
 
         if returnAll then
@@ -57,7 +57,7 @@ return function(self, expression, funcDepth, numReturns)
     else
         local tmpReg = retRegs[1] or self:allocRegister(false);
 
-        self:addStatement(self:setRegister(scope, tmpReg, Ast.StringExpression(expression.passSelfFunctionName)), {tmpReg}, {}, false);
+        self:addStatement(self:setRegister(scope, tmpReg, self:opaqueStringExpr(scope, expression.passSelfFunctionName)), {tmpReg}, {}, false);
         self:addStatement(self:setRegister(scope, tmpReg, Ast.IndexExpression(self:register(scope, baseReg), self:register(scope, tmpReg))), {tmpReg}, {baseReg, tmpReg}, false);
         self:addStatement(self:setRegister(scope, retRegs[1], Ast.FunctionCallExpression(self:register(scope, tmpReg), args)), {retRegs[1]}, {baseReg, unpack(regs)}, true);
     end

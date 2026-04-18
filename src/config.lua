@@ -32,4 +32,11 @@ return {
 
 	SPACE = " "; -- The Whitespace to be used by the unparser
 	TAB = "\t"; -- The Tab Whitespace to be used by the unparser for pretty printing
+	VirtualMachine = {
+        Enabled = false;  -- Enable VM compilation
+        CustomOpcodes = true;  -- Randomize opcode mappings
+        AntiDebug = true;  -- Add anti-debugging checks
+        IntegrityCheck = false;  -- Add integrity verification
+        ObfuscateRuntime = true;  -- Apply obfuscation to VM runtime
+    };
 }

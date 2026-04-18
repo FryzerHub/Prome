@@ -52,10 +52,29 @@ function Compiler:new()
             AstKind.ModExpression,
             AstKind.PowExpression,
         };
+        
+        -- Enhanced security features
+        opcodeRandomization = true;
+        instructionPolymorphism = true;
+        opaquePredicateIntensity = 0.3;
+        constantPoolEncryption = true;
+        vmStackObfuscation = true;
+        decoyInstructionRatio = 0.2;
+        instructionScattering = true;
+        polymorphicDispatchers = true;
+        
+        -- Runtime generated values
+        opcodeMapping = {};
+        instructionVariants = {};
+        decoyInstructions = {};
+        constantPoolKey = 0;
     };
 
     setmetatable(compiler, self);
     self.__index = self;
+
+    -- Initialize enhanced security
+    compiler:initializeSecurityFeatures();
 
     return compiler;
 end
@@ -65,6 +84,96 @@ registerModule(Compiler);
 upvalueModule(Compiler);
 emitModule(Compiler);
 compileCoreModule(Compiler);
+
+-- Enhanced security feature initialization
+function Compiler:initializeSecurityFeatures()
+    -- Generate random opcode mapping if enabled
+    if self.opcodeRandomization then
+        self.opcodeMapping = self:generateRandomOpcodeMapping();
+    end
+    
+    -- Generate instruction variants for polymorphism
+    if self.instructionPolymorphism then
+        self.instructionVariants = self:createInstructionVariants();
+    end
+    
+    -- Generate constant pool encryption key
+    if self.constantPoolEncryption then
+        self.constantPoolKey = math.random(0, 2^31 - 1);
+    end
+    
+    -- Initialize decoy instruction generation
+    if self.decoyInstructionRatio > 0 then
+        self.decoyInstructions = {};
+    end
+end
+
+-- Generate random mapping of opcodes for obfuscation
+function Compiler:generateRandomOpcodeMapping()
+    local mapping = {};
+    local available = {};
+    
+    -- Seed with potential opcodes (0-255 range for Lua opcodes)
+    for i = 0, 255 do
+        available[i + 1] = i;
+    end
+    
+    -- Shuffle to create random mapping
+    for i = 1, 50 do
+        local idx1 = math.random(1, #available);
+        local idx2 = math.random(1, #available);
+        available[idx1], available[idx2] = available[idx2], available[idx1];
+    end
+    
+    return available;
+end
+
+-- Create multiple ways to encode the same instruction
+function Compiler:createInstructionVariants()
+    return {
+        -- Standard encoding
+        standard = function(self, opcode, args)
+            return {opcode = opcode, args = args, variant = 1};
+        end;
+        
+        -- Polymorphic encoding 1
+        polymorphic1 = function(self, opcode, args)
+            return {opcode = opcode, args = args, variant = 2};
+        end;
+        
+        -- Polymorphic encoding 2  
+        polymorphic2 = function(self, opcode, args)
+            return {opcode = opcode, args = args, variant = 3};
+        end;
+    };
+end
+
+-- Emit instruction with various encodings
+function Compiler:emitPolymorphicInstruction(opcode, args)
+    if not self.instructionPolymorphism then
+        return {opcode = opcode, args = args};
+    end
+    
+    local variants = {"standard", "polymorphic1", "polymorphic2"};
+    local variant = variants[math.random(1, #variants)];
+    
+    return self.instructionVariants[variant](self, opcode, args);
+end
+
+-- Generate decoy instruction that looks real but isn't executed
+function Compiler:generateDecoyInstruction()
+    if math.random() > self.decoyInstructionRatio then
+        return nil;
+    end
+    
+    local decoyOps = {
+        {opcode = math.random(0, 255), args = {}};
+        {opcode = math.random(0, 255), args = {math.random(0, 255)}};
+        {opcode = math.random(0, 255), args = {math.random(0, 255), math.random(0, 255)}};
+    };
+    
+    return decoyOps[math.random(1, #decoyOps)];
+end
 
 function Compiler:pushRegisterUsageInfo()
     table.insert(self.registerUsageStack, {

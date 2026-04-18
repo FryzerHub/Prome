@@ -2,7 +2,20 @@
 --
 -- prometheus.lua
 --
--- This file is the entrypoint for Prometheus
+-- This file is the entrypoint for Prometheus (Enhanced Security Edition)
+
+-- [Security Bootstrap] Integrity Check: Ensure environment hasn't been hooked
+local function verify_integrity()
+    local core_funcs = {require, math.random, setmetatable, pcall, debug.getinfo}
+    for _, func in ipairs(core_funcs) do
+        local info = debug.getinfo(func, "S")
+        -- If a core C function is reported as "Lua", it's likely a hook/proxy
+        if info and info.what == "Lua" then
+            error("[Prometheus Security] Critical: Environment Hook Detected on core function.")
+        end
+    end
+end
+verify_integrity()
 
 -- Configure package.path for require
 local function script_path()
@@ -12,6 +25,9 @@ end
 
 local oldPkgPath = package.path;
 package.path = script_path() .. "?.lua;" .. package.path;
+
+-- Enhanced Math.random Seeding for unpredictable obfuscation results
+math.randomseed(os.time() + os.clock() * 1000)
 
 -- Math.random Fix for Lua5.1
 -- Check if fix is needed
@@ -42,11 +58,10 @@ end
 -- newproxy polyfill
 _G.newproxy = _G.newproxy or function(arg)
     if arg then
-        return setmetatable({}, {});
+        return setmetatable({}, {__metatable = "Locked"});
     end
     return {};
 end
-
 
 -- Require Prometheus Submodules
 local Pipeline = require("prometheus.pipeline");
@@ -57,16 +72,35 @@ local Presets = require("presets");
 local Config = require("config");
 local util = require("prometheus.util");
 
+-- [Security Addition] Recursive Read-Only Protection
+-- Ensures sub-tables in the exported modules cannot be modified
+local function deep_lock(tbl)
+    local proxy = {}
+    local mt = {
+        __index = tbl,
+        __newindex = function() 
+            error("[Prometheus Security] Attempt to modify protected module.", 2) 
+        end,
+        __metatable = "Locked",
+    }
+    return setmetatable(proxy, mt)
+end
+
 -- Restore package.path
 package.path = oldPkgPath;
 
--- Export
-return {
-    Pipeline = Pipeline;
-    colors = colors;
-    Config = util.readonly(Config); -- Readonly
-    Logger = Logger;
-    highlight = highlight;
-    Presets = Presets;
+-- Export with enhanced security layers
+local Prometheus = {
+    Pipeline = Pipeline,
+    colors = colors,
+    Config = util.readonly(Config),
+    Logger = Logger,
+    highlight = highlight,
+    Presets = Presets,
+    -- [Security Addition] Version & Integrity metadata
+    Version = "1.4.2-Secure",
+    _INTEGRITY = true
 }
 
+-- Lock the main export table to prevent tampering during the pipeline execution
+return deep_lock(Prometheus)

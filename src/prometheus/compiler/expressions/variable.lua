@@ -14,7 +14,7 @@ return function(self, expression, funcDepth, numReturns)
             if expression.scope.isGlobal then
                 regs[i] = self:allocRegister(false);
                 local tmpReg = self:allocRegister(false);
-                self:addStatement(self:setRegister(scope, tmpReg, Ast.StringExpression(expression.scope:getVariableName(expression.id))), {tmpReg}, {}, false);
+                self:addStatement(self:setRegister(scope, tmpReg, self:opaqueStringExpr(scope, expression.scope:getVariableName(expression.id))), {tmpReg}, {}, false);
                 self:addStatement(self:setRegister(scope, regs[i], Ast.IndexExpression(self:env(scope), self:register(scope, tmpReg))), {regs[i]}, {tmpReg}, true);
                 self:freeRegister(tmpReg, false);
             else

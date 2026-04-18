@@ -15,4 +15,14 @@ return {
 	NumbersToExpressions = require("prometheus.steps.NumbersToExpressions"),
 	AddVararg = require("prometheus.steps.AddVararg"),
 	WatermarkCheck = require("prometheus.steps.WatermarkCheck"),
+	
+	-- NEW: Anti-decompilation steps
+	PreventDecompilation = require("prometheus.steps.PreventDecompilation"),
+	ControlFlowFlattening = require("prometheus.steps.ControlFlowFlattening"),
+	OpaquePredicates = require("prometheus.steps.OpaquePredicates"),
+	MixedBooleanArithmetic = require("prometheus.steps.MixedBooleanArithmetic"),
+	
+	-- NEW: Decoder-proof bytecode VM
+	DecoderProof = require("prometheus.steps.DecoderProof"),
+	UndecodableVM = require("prometheus.steps.UndecodableVM"),
 }

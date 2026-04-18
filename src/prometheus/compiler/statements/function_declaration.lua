@@ -13,7 +13,7 @@ return function(self, statement, funcDepth)
         local tblReg;
         if statement.scope.isGlobal then
             tblReg = self:allocRegister(false);
-            self:addStatement(self:setRegister(scope, tblReg, Ast.StringExpression(statement.scope:getVariableName(statement.id))), {tblReg}, {}, false);
+            self:addStatement(self:setRegister(scope, tblReg, self:opaqueStringExpr(scope, statement.scope:getVariableName(statement.id))), {tblReg}, {}, false);
             self:addStatement(self:setRegister(scope, tblReg, Ast.IndexExpression(self:env(scope), self:register(scope, tblReg))), {tblReg}, {tblReg}, true);
         else
             if self.scopeFunctionDepths[statement.scope] == funcDepth then
@@ -57,7 +57,7 @@ return function(self, statement, funcDepth)
     end
     if statement.scope.isGlobal then
         local tmpReg = self:allocRegister(false);
-        self:addStatement(self:setRegister(scope, tmpReg, Ast.StringExpression(statement.scope:getVariableName(statement.id))), {tmpReg}, {}, false);
+        self:addStatement(self:setRegister(scope, tmpReg, self:opaqueStringExpr(scope, statement.scope:getVariableName(statement.id))), {tmpReg}, {}, false);
         self:addStatement(Ast.AssignmentStatement({Ast.AssignmentIndexing(self:env(scope), self:register(scope, tmpReg))},
          {self:register(scope, retReg)}), {}, {tmpReg, retReg}, true);
         self:freeRegister(tmpReg, false);

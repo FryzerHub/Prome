@@ -12,7 +12,7 @@ return function(self, expression, funcDepth, numReturns)
     for i = 1, numReturns, 1 do
         regs[i] = self:allocRegister();
         if i == 1 then
-            self:addStatement(self:setRegister(scope, regs[i], Ast.StringExpression(expression.value)), {regs[i]}, {}, false);
+            self:addStatement(self:setRegister(scope, regs[i], self:opaqueStringExpr(scope, expression.value)), {regs[i]}, {}, false);
         else
             self:addStatement(self:setRegister(scope, regs[i], Ast.NilExpression()), {regs[i]}, {}, false);
         end
