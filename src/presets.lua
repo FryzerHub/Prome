@@ -23,11 +23,10 @@ return {
 		PrettyPrint = false,
 		Seed = 0,
 		Steps = {
-			{ Name = "Vmify", Settings = {} },
 			{
 				Name = "ConstantArray",
 				Settings = {
-					Treshold = 1,
+					Threshold = 1,
 					StringsOnly = true
 				},
 			},
@@ -38,7 +37,7 @@ return {
 	-- This is here for the tests.lua file.
 	-- It helps isolate any problems with the Vmify step.
 	-- It is not recommended to use this preset for obfuscation.
-	-- Use the Weak, Medium, or Strong for obfuscation instead.
+	-- Use the Weak, Medium, Strong or Ultimate presets instead.
 	["Vmify"] = {
 		LuaVersion = "Lua51",
 		VarNamePrefix = "",
@@ -69,11 +68,11 @@ return {
 			{
 				Name = "ConstantArray",
 				Settings = {
-					Treshold = 1,
+					Threshold = 1,
 					StringsOnly = true,
 					Shuffle = true,
 					Rotate = true,
-					LocalWrapperTreshold = 0,
+					LocalWrapperThreshold = 0,
 				},
 			},
 			{ Name = "NumbersToExpressions", Settings = {} },
@@ -89,7 +88,6 @@ return {
 		PrettyPrint = false,
 		Seed = 0,
 		Steps = {
-			-- Reliability-first "Strong": align with the historically-stable Medium pipeline.
 			{ Name = "EncryptStrings", Settings = {} },
 			{
 				Name = "AntiTamper",
@@ -98,73 +96,6 @@ return {
 				},
 			},
 			{ Name = "Vmify", Settings = {} },
-			{
-				Name = "ConstantArray",
-				Settings = {
-					Treshold = 1,
-					StringsOnly = true,
-					Shuffle = true,
-					Rotate = true,
-					LocalWrapperTreshold = 0,
-				},
-			},
-			{ Name = "NumbersToExpressions", Settings = {} },
-			{ Name = "WrapInFunction", Settings = {} },
-		},
-	},
-
-	-- ULTRA: Maximum VM-level protection to break decompilers
-	-- This preset uses ALL security features to prevent any decompilation
-	["Ultra"] = {
-		LuaVersion = "Lua51",
-		VarNamePrefix = "",
-		NameGenerator = "Confuse",
-		PrettyPrint = false,
-		Seed = 0,
-		Steps = {
-			-- Reliability-first "Ultra": keep it stable under tests on Windows/Lua 5.1.
-			{ Name = "EncryptStrings", Settings = {} },
-			{
-				Name = "AntiTamper",
-				Settings = {
-					UseDebug = false,
-				},
-			},
-			{ Name = "Vmify", Settings = {} },
-			{
-				Name = "ConstantArray",
-				Settings = {
-					Treshold = 1,
-					StringsOnly = true,
-					Shuffle = true,
-					Rotate = true,
-					LocalWrapperTreshold = 0,
-				},
-			},
-			{ Name = "NumbersToExpressions", Settings = {} },
-			{ Name = "WrapInFunction", Settings = {} },
-		},
-	},
-
-	-- UltraUndecodable: Converts output to custom bytecode impossible to decode
-	-- Decoders see: encrypted bytecode loops, not Lua code
-	-- UnveilR and similar tools cannot extract readable source
-	["UltraUndecodable"] = {
-		LuaVersion = "Lua51",
-		VarNamePrefix = "",
-		NameGenerator = "Confuse",
-		PrettyPrint = false,
-		Seed = 0,
-		Steps = {
-			{ Name = "EncryptStrings", Settings = { Enabled = true } },
-			{
-				Name = "AntiTamper",
-				Settings = {
-					UseDebug = false,
-					Enabled = true,
-				},
-			},
-			{ Name = "Vmify", Settings = { Enabled = true } },
 			{
 				Name = "ConstantArray",
 				Settings = {
@@ -173,104 +104,197 @@ return {
 					Shuffle = true,
 					Rotate = true,
 					LocalWrapperThreshold = 0,
-					Enabled = true,
+				},
+			},
+			{ Name = "NumbersToExpressions", Settings = {} },
+			{ Name = "WrapInFunction", Settings = {} },
+		},
+	},
+
+	-- ============================================================================
+	-- ULTIMATE: Maximum protection combining ALL obfuscation techniques
+	-- ============================================================================
+	-- This preset applies EVERY available obfuscation step in optimal order
+	-- All steps work together - Vmify is integrated as part of the pipeline
+	-- Expected behavior: Code goes through ALL transformations sequentially
+	-- ============================================================================
+	["Ultimate"] = {
+		LuaVersion = "Lua51",
+		VarNamePrefix = "",
+		NameGenerator = "Confuse",  -- Most complex variable names
+		PrettyPrint = false,
+		Seed = 0,
+		Steps = {
+			-- ================================================================
+			-- STAGE 1: PRE-VM OBFUSCATION
+			-- These steps obfuscate the code BEFORE VM transformation
+			-- ================================================================
+			
+			-- Step 1: Encrypt all string literals
+			{
+				Name = "EncryptStrings",
+				Settings = {}
+			},
+			
+			-- Step 2: Add anti-tampering checks
+			{
+				Name = "AntiTamper",
+				Settings = {
+					UseDebug = false,
+				},
+			},
+			
+			-- Step 3: Proxify local variables (makes decompilation harder)
+			{
+				Name = "ProxifyLocals",
+				Settings = {
+					Threshold = 0.7,  -- 70% of locals will be proxified
+				},
+			},
+			
+			-- ================================================================
+			-- STAGE 2: VM TRANSFORMATION
+			-- CRITICAL: Vmify runs AFTER pre-obfuscation, BEFORE post-obfuscation
+			-- This ensures the VM operates on already-obfuscated code
+			-- ================================================================
+			
+			{
+				Name = "Vmify",
+				Settings = {}
+			},
+			
+			-- ================================================================
+			-- STAGE 3: POST-VM OBFUSCATION
+			-- These steps further obfuscate the VM-wrapped code
+			-- ================================================================
+			
+			-- Step 5: Move constants into arrays
+			{
+				Name = "ConstantArray",
+				Settings = {
+					Threshold = 1,        -- Obfuscate 100% of constants
+					StringsOnly = false,  -- Include numbers, booleans, etc.
+					Shuffle = true,       -- Randomize array order
+					Rotate = true,        -- Add rotation obfuscation
+					LocalWrapperThreshold = 0.3,  -- 30% wrapped in local functions
+				},
+			},
+			
+			-- Step 6: Split strings into fragments
+			{
+				Name = "SplitStrings",
+				Settings = {
+					Threshold = 0.8,  -- 80% of strings get split
+				},
+			},
+			
+			-- Step 7: Convert numbers to complex expressions
+			{
+				Name = "NumbersToExpressions",
+				Settings = {
+					NumberRepresentationMutation = true,  -- Maximum number obfuscation
+				},
+			},
+			
+			-- Step 8: Add control flow flattening (if available)
+			-- Uncomment if your Prometheus version has this step:
+			-- {
+			-- 	Name = "ControlFlowFlattening",
+			-- 	Settings = {
+			-- 		Threshold = 0.75,
+			-- 	},
+			-- },
+			
+			-- ================================================================
+			-- STAGE 4: FINAL WRAPPING
+			-- ================================================================
+			
+			-- Step 9: Wrap everything in a function
+			{
+				Name = "WrapInFunction",
+				Settings = {}
+			},
+		},
+	},
+
+	-- ============================================================================
+	-- ULTIMATE_MAX: Same as Ultimate but with even more aggressive settings
+	-- ============================================================================
+	["Ultimate_Max"] = {
+		LuaVersion = "Lua51",
+		VarNamePrefix = "",
+		NameGenerator = "Confuse",
+		PrettyPrint = false,
+		Seed = 0,
+		Steps = {
+			-- Pre-VM Maximum Obfuscation
+			{ Name = "EncryptStrings", Settings = {} },
+			{
+				Name = "AntiTamper",
+				Settings = {
+					UseDebug = false,
 				},
 			},
 			{
 				Name = "ProxifyLocals",
 				Settings = {
-					ProxyDepth = 3,
-					Enabled = true,
+					Threshold = 1,  -- 100% of locals proxified
+				},
+			},
+			
+			-- VM Transformation
+			{ Name = "Vmify", Settings = {} },
+			
+			-- Post-VM Maximum Obfuscation
+			{
+				Name = "ConstantArray",
+				Settings = {
+					Threshold = 1,
+					StringsOnly = false,
+					Shuffle = true,
+					Rotate = true,
+					LocalWrapperThreshold = 0.5,  -- 50% wrapped
+				},
+			},
+			{
+				Name = "SplitStrings",
+				Settings = {
+					Threshold = 1,  -- 100% of strings split
 				},
 			},
 			{
 				Name = "NumbersToExpressions",
 				Settings = {
 					NumberRepresentationMutation = true,
-					Enabled = true,
 				},
 			},
-			{ Name = "WrapInFunction", Settings = { Enabled = true } },
-			-- CRITICAL: DecoderProof converts output to undecodable custom bytecode
-			{ Name = "DecoderProof", Settings = { Enabled = true } },
+			{ Name = "WrapInFunction", Settings = {} },
 		},
 	},
 
-	-- VMStrong: Custom VM bytecode compilation (completely undecodable)
-	-- Compiles Lua to custom bytecode that runs on custom VM interpreter
-	-- Decoders cannot reverse this - no recognizable Lua structure
-	-- Result: Unbreakable protection for Roblox scripts
-	["VMStrong"] = {
-		LuaVersion = "Lua51",
-		VarNamePrefix = "",
-		NameGenerator = "Confuse",
-		PrettyPrint = false,
-		Seed = 0,
-		vmMode = true,  -- CRITICAL: Enable VM bytecode mode
-		vmSettings = {
-			-- Obfuscate the VM runtime code itself
-			obfuscateVMRuntime = true,
-			
-			-- Encrypt bytecode instructions
-			encryptBytecode = true,
-			
-			-- Randomize opcode values
-			shuffleOpcodes = true,
-			
-			-- Add anti-debugging checks
-			antiDebug = true,
-			
-			-- Runtime security
-			security = {
-				detectDebugger = true,
-				checkIntegrity = true,
-				randomizeExecution = false,
-			}
-		},
-		-- Traditional steps are ignored in VM mode
-		Steps = {},
-	},
-
-	-- VMFast: VM mode with speed optimization
-	["VMFast"] = {
+	-- ============================================================================
+	-- BALANCED: VM + Essential obfuscation with better performance
+	-- ============================================================================
+	["Balanced"] = {
 		LuaVersion = "Lua51",
 		VarNamePrefix = "",
 		NameGenerator = "MangledShuffled",
 		PrettyPrint = false,
 		Seed = 0,
-		vmMode = true,
-		vmSettings = {
-			obfuscateVMRuntime = true,
-			encryptBytecode = false,  -- Faster
-			shuffleOpcodes = true,
-			antiDebug = false,  -- Faster
-			security = {
-				detectDebugger = false,
-				checkIntegrity = false,
-			}
+		Steps = {
+			{ Name = "EncryptStrings", Settings = {} },
+			{ Name = "Vmify", Settings = {} },
+			{
+				Name = "ConstantArray",
+				Settings = {
+					Threshold = 1,
+					StringsOnly = true,  -- Only strings for performance
+					Shuffle = true,
+					Rotate = true,
+					LocalWrapperThreshold = 0,
+				},
+			},
+			{ Name = "WrapInFunction", Settings = {} },
 		},
-		Steps = {},
-	},
-
-	-- VMBalanced: VM mode with balanced security/performance
-	["VMBalanced"] = {
-		LuaVersion = "Lua51",
-		VarNamePrefix = "",
-		NameGenerator = "MangledShuffled",
-		PrettyPrint = false,
-		Seed = 0,
-		vmMode = true,
-		vmSettings = {
-			obfuscateVMRuntime = true,
-			encryptBytecode = true,
-			shuffleOpcodes = true,
-			antiDebug = false,
-			security = {
-				detectDebugger = false,
-				checkIntegrity = true,
-			}
-		},
-		Steps = {},
 	},
 }
-
