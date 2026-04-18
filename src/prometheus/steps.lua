@@ -21,6 +21,7 @@ return {
 	ControlFlowFlattening = require("prometheus.steps.ControlFlowFlattening"),
 	OpaquePredicates = require("prometheus.steps.OpaquePredicates"),
 	MixedBooleanArithmetic = require("prometheus.steps.MixedBooleanArithmetic"),
+	Vmify = require("prometheus.steps.Vmify"),
 	
 	-- NEW: Decoder-proof bytecode VM
 	DecoderProof = require("prometheus.steps.DecoderProof"),
