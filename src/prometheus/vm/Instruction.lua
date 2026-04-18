@@ -1,11 +1,9 @@
--- VM Instruction Class
 local Opcode = require("prometheus.vm.Opcode").Opcode;
 local OpcodeInfo = require("prometheus.vm.Opcode").OpcodeInfo;
 
 local Instruction = {};
 Instruction.__index = Instruction;
 
--- Create new instruction
 function Instruction:new(opcode, ...)
     local args = {...};
     local info = OpcodeInfo[opcode];
@@ -24,7 +22,6 @@ function Instruction:new(opcode, ...)
     return inst;
 end
 
--- Encode instruction to bytecode
 function Instruction:encode()
     local encoded = {self.opcode};
     for i, arg in ipairs(self.args) do
@@ -33,13 +30,12 @@ function Instruction:encode()
     return encoded;
 end
 
--- Decode bytecode to instruction
 function Instruction.decode(bytecode, index)
     local opcode = bytecode[index];
     local info = OpcodeInfo[opcode];
     
     if not info then
-        error("Invalid opcode at index " .. index .. ": " .. tostring(opcode));
+        error("Invalid opcode at index " .. index);
     end
     
     local args = {};
@@ -50,7 +46,6 @@ function Instruction.decode(bytecode, index)
     return Instruction:new(opcode, unpack(args)), index + info.args;
 end
 
--- String representation
 function Instruction:__tostring()
     local str = self.name;
     if #self.args > 0 then

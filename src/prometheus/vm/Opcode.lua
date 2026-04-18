@@ -1,66 +1,39 @@
 -- Opcode Definitions for Custom VM
 local Opcode = {
-    -- Constant Loading
-    LOADK = 0,      -- Load constant
-    LOADBOOL = 1,   -- Load boolean
-    LOADNIL = 2,    -- Load nil
-    
-    -- Arithmetic Operations
-    ADD = 3,        -- Addition
-    SUB = 4,        -- Subtraction
-    MUL = 5,        -- Multiplication
-    DIV = 6,        -- Division
-    MOD = 7,        -- Modulo
-    POW = 8,        -- Power
-    UNM = 9,        -- Unary minus
-    
-    -- Logical Operations
-    NOT = 10,       -- Logical NOT
-    LEN = 11,       -- Length operator
-    
-    -- Comparison Operations
-    EQ = 12,        -- Equal
-    LT = 13,        -- Less than
-    LE = 14,        -- Less or equal
-    
-    -- Table Operations
-    NEWTABLE = 15,  -- Create new table
-    GETTABLE = 16,  -- Get table value
-    SETTABLE = 17,  -- Set table value
-    GETGLOBAL = 18, -- Get global variable
-    SETGLOBAL = 19, -- Set global variable
-    
-    -- Function Operations
-    CALL = 20,      -- Function call
-    RETURN = 21,    -- Return from function
-    CLOSURE = 22,   -- Create closure
-    
-    -- Control Flow
-    JMP = 23,       -- Unconditional jump
-    FORPREP = 24,   -- For loop preparation
-    FORLOOP = 25,   -- For loop iteration
-    TEST = 26,      -- Conditional test
-    
-    -- Variable Operations
-    MOVE = 27,      -- Move value between registers
-    GETUPVAL = 28,  -- Get upvalue
-    SETUPVAL = 29,  -- Set upvalue
-    
-    -- Concatenation
-    CONCAT = 30,    -- String concatenation
-    
-    -- Vararg
-    VARARG = 31,    -- Variable arguments
-    
-    -- Advanced
-    SELF = 32,      -- Method call setup
-    TAILCALL = 33,  -- Tail call optimization
-    TFORLOOP = 34,  -- Generic for loop
-    SETLIST = 35,   -- Set list of values
-    CLOSE = 36,     -- Close upvalues
+    LOADK = 0,
+    LOADBOOL = 1,
+    LOADNIL = 2,
+    ADD = 3,
+    SUB = 4,
+    MUL = 5,
+    DIV = 6,
+    MOD = 7,
+    POW = 8,
+    UNM = 9,
+    NOT = 10,
+    LEN = 11,
+    EQ = 12,
+    LT = 13,
+    LE = 14,
+    NEWTABLE = 15,
+    GETTABLE = 16,
+    SETTABLE = 17,
+    GETGLOBAL = 18,
+    SETGLOBAL = 19,
+    CALL = 20,
+    RETURN = 21,
+    CLOSURE = 22,
+    JMP = 23,
+    FORPREP = 24,
+    FORLOOP = 25,
+    TEST = 26,
+    MOVE = 27,
+    GETUPVAL = 28,
+    SETUPVAL = 29,
+    CONCAT = 30,
+    VARARG = 31,
 }
 
--- Opcode Metadata
 local OpcodeInfo = {
     [Opcode.LOADK] = {name = "LOADK", args = 2},
     [Opcode.LOADBOOL] = {name = "LOADBOOL", args = 3},
@@ -94,11 +67,6 @@ local OpcodeInfo = {
     [Opcode.SETUPVAL] = {name = "SETUPVAL", args = 2},
     [Opcode.CONCAT] = {name = "CONCAT", args = 3},
     [Opcode.VARARG] = {name = "VARARG", args = 2},
-    [Opcode.SELF] = {name = "SELF", args = 3},
-    [Opcode.TAILCALL] = {name = "TAILCALL", args = 3},
-    [Opcode.TFORLOOP] = {name = "TFORLOOP", args = 2},
-    [Opcode.SETLIST] = {name = "SETLIST", args = 3},
-    [Opcode.CLOSE] = {name = "CLOSE", args = 1},
 }
 
 return {

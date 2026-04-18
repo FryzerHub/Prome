@@ -1,27 +1,25 @@
 -- This Script is Part of the Prometheus Obfuscator by Levno_710
 --
 -- Vmify.lua
--- This file wraps the script in a VM
 
 local Step = require("prometheus.step");
-local logger = require("prometheus.logger");
 local Ast = require("prometheus.ast");
+local logger = require("prometheus.logger");
 
 local Vmify = Step:extend();
 Vmify.Name = "Vmify";
-Vmify.Description = "Wraps the script in a Virtual Machine";
+Vmify.Description = "This Step will Compile your script and run it within a VM";
+Vmify.SettingsDescriptor = {};
 
 function Vmify:init(settings)
-    -- Initialize settings
+    -- Initialize
 end
 
 function Vmify:apply(ast, pipeline)
-    logger:info("Applying Vmify Step...");
+    logger:info("Applying Vmify step...");
     
-    -- For now, just return the AST as-is
-    -- Full VM implementation requires extensive AST compilation
-    logger:warn("VM functionality is not fully implemented yet");
-    logger:info("Returning original AST");
+    -- VM not fully implemented - return original AST
+    logger:warn("VM is not fully implemented yet - returning original AST");
     
     return ast;
 end

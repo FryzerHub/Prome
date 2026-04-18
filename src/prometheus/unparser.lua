@@ -14,7 +14,7 @@ local config = require("config");
 local Ast = require("prometheus.ast");
 local Enums = require("prometheus.enums");
 local util = require("prometheus.util");
-local logger = require("logger");
+local logger = require("prometheus.logger");
 
 local lookupify = util.lookupify;
 local LuaVersion = Enums.LuaVersion;

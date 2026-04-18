@@ -12,7 +12,7 @@ local Step = require("prometheus.step")
 local Ast = require("prometheus.ast")
 local visitast = require("prometheus.visitast")
 local util = require("prometheus.util")
-local logger = require("logger")
+local logger = require("prometheus.logger")
 local AstKind = Ast.AstKind
 
 local NumbersToExpressions = Step:extend()

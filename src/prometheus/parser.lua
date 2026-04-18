@@ -16,7 +16,7 @@ local Enums = require("prometheus.enums");
 local util = require("prometheus.util");
 local Ast = require("prometheus.ast");
 local Scope = require("prometheus.scope");
-local logger = require("logger");
+local logger = require("prometheus.logger");
 
 local AstKind = Ast.AstKind;
 

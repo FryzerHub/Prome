@@ -9,7 +9,7 @@ local Enums = require("prometheus.enums");
 local util = require("prometheus.util");
 local Parser = require("prometheus.parser");
 local Unparser = require("prometheus.unparser");
-local logger = require("logger");
+local logger = require("prometheus.logger");
 
 local NameGenerators = require("prometheus.namegenerators");
 

@@ -6,7 +6,7 @@
 -- This Tokenizer is Capable of tokenizing LuaU and Lua5.1
 local Enums = require("prometheus.enums");
 local util = require("prometheus.util");
-local logger = require("logger");
+local logger = require("prometheus.logger");
 local config = require("config");
 
 local LuaVersion = Enums.LuaVersion;

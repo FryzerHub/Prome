@@ -66,8 +66,8 @@ end
 -- Require Prometheus Submodules
 local Pipeline = require("prometheus.pipeline");
 local highlight = require("highlightlua");
-local colors = require("colors");
-local Logger = require("logger");
+local colors = require("prometheus.colors");
+local Logger = require("prometheus.logger");
 local Presets = require("presets");
 local Config = require("config");
 local util = require("prometheus.util");

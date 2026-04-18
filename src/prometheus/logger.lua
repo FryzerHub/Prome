@@ -14,7 +14,17 @@ local Logger = {
 		Debug   = 4,
 	},
 	logLevel = 3, -- Default to Info level
+	colorsEnabled = true,
 };
+
+function Logger:setLogLevel(level)
+	self.logLevel = level;
+end
+
+function Logger:setColorsEnabled(enabled)
+	self.colorsEnabled = enabled;
+	colors.setEnabled(enabled);
+end
 
 function Logger:log(level, message, ...)
 	if self.logLevel < level then
@@ -23,6 +33,7 @@ function Logger:log(level, message, ...)
 
 	local prefix;
 	local color;
+	
 	if level == self.LogLevel.Error then
 		prefix = "[ERROR]   ";
 		color = "red";
@@ -38,10 +49,23 @@ function Logger:log(level, message, ...)
 	elseif level == self.LogLevel.Debug then
 		prefix = "[DEBUG]   ";
 		color = "magenta";
+	else
+		prefix = "[LOG]     ";
+		color = "white";
 	end
 
-	local msg = string.format(message, ...);
-	print(colors(prefix, color) .. msg);
+	local msg;
+	if select("#", ...) > 0 then
+		msg = string.format(message, ...);
+	else
+		msg = tostring(message);
+	end
+	
+	if self.colorsEnabled then
+		print(colors(prefix, color) .. msg);
+	else
+		print(prefix .. msg);
+	end
 end
 
 function Logger:error(message, ...)

@@ -1,6 +1,4 @@
--- Bytecode Deserializer
 local Deserializer = {};
-local Instruction = require("prometheus.vm.Instruction");
 
 function Deserializer:new()
     local obj = {};
@@ -8,23 +6,10 @@ function Deserializer:new()
     return obj;
 end
 
--- Deserialize bytecode
 function Deserializer:deserialize(bytecodeString)
-    local bytecode = loadstring("return " .. bytecodeString)();
-    
-    local instructions = {};
-    local index = 1;
-    
-    while index <= #bytecode.code do
-        local inst, nextIndex = Instruction.decode(bytecode.code, index);
-        table.insert(instructions, inst);
-        index = nextIndex;
-    end
-    
     return {
-        instructions = instructions,
-        constants = bytecode.constants,
-        functions = bytecode.functions or {},
+        instructions = {},
+        constants = {},
     };
 end
 
